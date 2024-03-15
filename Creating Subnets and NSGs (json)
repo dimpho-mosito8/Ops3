@@ -29,7 +29,8 @@
         "BackEndAddr": "192.168.0.0/24",
         "FrontEndAddr": "192.168.1.0/24",
         "DBSubnetAddr": "192.168.2.0/24",
-        "nsgRule1": "AllowHTTPinTraffic"
+        "nsgRule1": "AllowHTTPinTraffic",
+        "nsgRule2": "AllowBEinTrafficOnly"
        
 
 
@@ -93,8 +94,24 @@
                         "sourceAddressPrefix": "*",
                         "destinationAddressPrefix": "[variables('FrontEndAddr')]",
                         "access": "Allow",
-                        "priority": 100,
+                        "priority": 111,
                         "direction": "Inbound"
+                    }
+                },
+
+                {
+                    "name": "",
+                    "properties": {
+                        "description": "Allow BackEnd Inbound Traffic Only",
+                        "protocol": "Tcp",
+                        "sourcePortRange": "*",
+                        "destinationPortRange": "80",
+                        "sourceAddressPrefix": "[variables('BackEndAddr')]",
+                        "destinationAddressPrefix": "[variables('DBSubnetAddr')]",
+                        "access": "Allow",
+                        "priority": 105,
+                        "direction": "Inbound"
+                        
                     }
                 }
             ]
