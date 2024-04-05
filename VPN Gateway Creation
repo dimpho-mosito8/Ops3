@@ -1,1 +1,114 @@
+ "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
 
+          "Vnet1Name": {
+            "type": "string",
+            "defaultValue": "OPS3_VPN_Vnet1",
+            "metadata": {
+                "description": "description"
+        }
+    }
+    },
+    "functions": [],
+    "variables": {
+
+        "subnet1Name": "Jumpbox",
+        "subnet2Name": "Workload",
+        "subnet3Name": "Gateway",
+        "VnetAddSpace": "10.0.0.0/16",
+        "JumpboxAddr": "10.0.1.0/24",
+        "WorkloadAddr": "10.0.2.0/24",
+        "GatewayAddr": "10.0.0.0/28"
+    },
+    "resources": [
+
+        {
+            "name": "[parameters('Vnet1Name')]",
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2023-04-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "[parameters('Vnet1Name')]"
+            },
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": [
+                        "[variables('VnetAddSpace')]"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "[variables('subnet1Name')]",
+                        "properties": {
+                            "addressPrefix": "[variables('JumpboxAddr')]"
+                        }
+                    },
+                    {
+                        "name": "[variables('subnet2Name')]",
+                        "properties": {
+                            "addressPrefix": "[variables('WorkloadAddr')]"
+                        }
+                    },
+                    {
+                        "name": "[variables('subnet3Name')]",
+                        "properties": {
+                            "addressPrefix": "[variables('GatewayAddr')]"
+                        }
+                    }
+                ]
+            }
+        },
+
+        {
+            "name": "publicIPAddress1",
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2023-04-01",
+            "location": "[resourceGroup().location]",
+            "tags": {
+                "displayName": "publicIPAddress1"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "dnsname1"
+                }
+            }
+        },
+
+        {
+            "name": "virtualNetworkGateway1",
+            "type": "Microsoft.Network/virtualNetworkGateways",
+            "apiVersion": "2023-04-01",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', 'publicIPAddress1')]",
+                "[resourceId('Microsoft.Network/virtualNetworks', 'virtualNetwork1')]"
+            ],
+            "properties": {
+                "ipConfigurations": [
+                    {
+                        "name": "vnetGatewayConfig",
+                        "properties": {
+                            "privateIPAllocationMethod": "Dynamic",
+                            "subnet": {
+                                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', 'virtualNetwork1', 'subnet1')]"
+                            },
+                            "publicIPAddress": {
+                                "id": "[resourceId('Microsoft.Network/publicIPAddresses', 'publicIPAddress1')]"
+                            }
+                        }
+                    }
+                ],
+                "sku": {
+                    "name": "Basic",
+                    "tier": "Basic"
+                },
+                "gatewayType": "Vpn",
+                "vpnType": "PolicyBased",
+                "enableBgp": true
+            }
+        }
+    ],
+    "outputs": {}
+}
